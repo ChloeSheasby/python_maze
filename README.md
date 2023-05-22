@@ -87,3 +87,70 @@ def dfs_path(self, graph, start, end):
     except:
         return []
 ```
+
+## Task 3
+### Instructions
+- Add ASP to your existing game to generate random pits, rewards, etc.
+
+### Demo Screenshots
+- The maze is generated randomly each time the project is run.
+- The fires are generated randomly. If the player runs into a fire, the player dies and the game quits.
+- The wall colors are also generated randomly. Adjacent walls cannot have the same color.
+<img width="912" alt="Screenshot 2023-05-21 at 9 06 26 PM" src="https://github.com/ChloeSheasby/python_maze/assets/47607144/8279244a-b6d2-47c7-898b-bdc4a246b004">
+
+### ASP Additions
+#### Fire Generation
+- Only 20 fires can be made, and there cannot be more than 3 fires per row and column. 
+```
+% Define the dimensions of the maze
+#const width = {width}.
+#const height = {height}.
+
+% Define the number of fires
+#const num_fires = 20.
+
+% Define walls
+{clingo_walls_fires}
+
+% Define fires
+{{ fire(X, Y) : X = 1..width, Y = 1..height }} = num_fires.
+
+% Ensure the start and end positions are not obstacles
+:- fire(1, 1).
+:- fire(width, height).
+
+% Ensure fires do not render on top of walls
+:- fire(X, Y), wall(X, Y).
+
+% Ensure no more than 3 fires in the same row
+:- X = 1..width, #count {{ Y : fire(X, Y) }} > 3.
+
+% Ensure no more than 3 fires in the same column
+:- Y = 1..height, #count {{ X : fire(X, Y) }} > 3.
+
+% Ensure fires are not right next to each other
+:- fire(X, Y), fire(X+1, Y).
+:- fire(X, Y), fire(X-1, Y).
+:- fire(X, Y), fire(X, Y+1).
+:- fire(X, Y), fire(X, Y-1).
+```
+
+#### Wall Color Generation
+- The idea of this is using the map coloring algorithm to decide wall colors.
+
+```
+% Define maze walls as facts
+{clingo_walls_colors}
+
+% Define colors as facts
+color(color1). color(color2). color(color3). color(color4). color(color5). color(color6).
+
+% Each wall should have exactly one color assigned
+1 {{colored_wall(WallX, WallY, Color) : color(Color)}} 1 :- wall(WallX, WallY).
+
+% Adjacency constraint
+:- colored_wall(X, Y, C), colored_wall(X+1, Y, C).
+:- colored_wall(X, Y, C), colored_wall(X, Y+1, C).
+:- colored_wall(X+1, Y, C), colored_wall(X+1, Y+1, C).
+:- colored_wall(X, Y+1, C), colored_wall(X+1, Y+1, C).
+```
