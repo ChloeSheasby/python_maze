@@ -1,3 +1,7 @@
+# Flags for different game plays
+AUTOMATE_PLAYER = False
+A_STAR = True
+
 # Define the grid size and the window size
 WIDTH = 800
 HEIGHT = 500
@@ -21,6 +25,17 @@ GOAL_POS = (WIDTH-1, HEIGHT-1)
 # Define the font
 FONT = 'Comic Sans MS'
 FONT_SIZE = 50
+
+P = 0b1000
+
+COLOR_MAP = {
+    'color1': (0, 0, 205),
+    'color2': (173, 216, 230),
+    'color3': (65, 105, 225),
+    'color4': (30, 144, 255),
+    'color5': (70, 130, 180),
+    'color6': (100, 149, 237)
+}
 
 # Define the directions to help with maze creation
 N, S, E, W = 1, 2, 4, 8

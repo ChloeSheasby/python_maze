@@ -1,11 +1,15 @@
+import heapq
+import random
+
+import networkx as nx
+import pygame
+from clingo_fire_generation import *
+from clingo_wall_coloring import *
+from config import *
+from fire import Fire
 from player import Player
 from treasure import Treasure
-import pygame
-import random
-from config import *
 from wall import Wall
-import heapq
-import networkx as nx
 
 # Initialize pygame
 pygame.init()
@@ -21,16 +25,14 @@ class Game:
         pygame.display.set_caption("My Maze")
 
         # Define the agent starting position
-        player_image_path = "./assets/Player.png"
-        self.player = Player(player_image_path)
+        self.player = Player("./assets/Player.png")
 
         self.player_size = PLAYER_SIZE
 
         self.player_speed = PLAYER_SPEED
 
         # Ending point
-        treasure_image_path = "./assets/Treasure.png"
-        self.treasure = Treasure(treasure_image_path)
+        self.treasure = Treasure("./assets/Treasure.png")
 
         # Define the game loop
         self.running = True
@@ -41,6 +43,11 @@ class Game:
     def handle_events(self):
         if self.player.rect.colliderect(self.treasure.rect):
             print("Congratulations! You've won!")
+            self.running = False
+        # Check for collisions between the player and fires
+        if pygame.sprite.spritecollide(self.player, self.maze_fires, False):
+            # Handle character death
+            print("Oh no! You died.")
             self.running = False
 
         # Check for user input to move the player
@@ -152,7 +159,7 @@ class Game:
                             graph.add_edge((x, y), (x + dx, y + dy))
         return graph
 
-    def dfs_path(self, graph, start, end):
+    def dfs_path(self, graph, start):
         try:
             path = nx.dfs_preorder_nodes(graph, source=start)
             return list(path)
@@ -166,13 +173,18 @@ class Game:
         self.recursive_division(grid, 0, 0, grid_width, grid_height)
 
         maze_walls = pygame.sprite.Group()  # Create a sprite group for the walls
+        maze_fires = pygame.sprite.Group()  # Create a sprite group for the fires
+        clingo_walls_fires = ""
+        clingo_walls_colors = ""
         start_x, start_y = 1, 1
-        end_x, end_y = grid_width - 2, grid_height - 2  # Change the end point to avoid the wall
+        end_x, end_y = grid_width - 2, grid_height - 2 # Change the end point to avoid the wall
 
         # Find a path between the starting point and the ending point
-        self.path = self.a_star(grid, (start_x, start_y), (end_x, end_y))
-        # graph = self.create_graph_from_grid(grid)
-        # self.path = self.dfs_path(graph, (start_x, start_y), (end_x, end_y))
+        if A_STAR:
+            self.path = self.a_star(grid, (start_x, start_y), (end_x, end_y))
+        else:
+            graph = self.create_graph_from_grid(grid)
+            self.path = self.dfs_path(graph, (start_x, start_y), (end_x, end_y))
 
         for y in range(grid_height):
             for x in range(grid_width):
@@ -183,14 +195,34 @@ class Game:
                 if (x, y) in self.path:
                     continue
                 if grid[y][x] & E:
-                    wall = Wall(x * GRID_SIZE, y * GRID_SIZE, GRID_SIZE, GRID_SIZE)
-                    maze_walls.add(wall)
+                    # wall = Wall(x * GRID_SIZE, y * GRID_SIZE)
+                    # maze_walls.add(wall)
+                    clingo_walls_fires += f"wall({x}, {y}). "
+                    clingo_walls_colors += f"wall({x}, {y}). "
                 if grid[y][x] & S:
-                    wall = Wall(x * GRID_SIZE, y * GRID_SIZE, GRID_SIZE, GRID_SIZE)
-                    maze_walls.add(wall)
+                    # wall = Wall(x * GRID_SIZE, y * GRID_SIZE)
+                    # maze_walls.add(wall)
+                    clingo_walls_fires += f"wall({x}, {y}). "
+                    clingo_walls_colors += f"wall({x}, {y}). "
 
-        return maze_walls
+        # Get fire positions using the clingo_walls
+        fire_positions = get_fire_positions(clingo_walls_fires)
 
+        # Get wall colors using the clingo_walls
+        wall_colors = get_wall_colors(clingo_walls_colors)
+
+        # Create wall instances and add them to maze_walls sprite group
+        for (x, y), color in wall_colors.items(): 
+            wall = Wall(x * GRID_SIZE, y * GRID_SIZE, color)
+            maze_walls.add(wall)
+
+        # Create fire instances and add them to maze_fires sprite group
+        for x, y in fire_positions:
+            fire = Fire('./assets/Fire.png', x, y)
+            maze_fires.add(fire)
+
+        self.maze_walls = maze_walls
+        self.maze_fires = maze_fires
 
     def draw(self):
         # Keep the player within the screen
@@ -202,7 +234,11 @@ class Game:
 
         # Draw maze walls
         for wall in self.maze_walls:
-            pygame.draw.rect(self.screen, (0, 0, 255), wall)
+            self.screen.blit(wall.image, wall.rect)
+
+        # Draw maze fires
+        for fire in self.maze_fires:
+            self.screen.blit(fire.image, fire.rect)
 
         # Draw player
         self.screen.blit(self.player.image, self.player.rect)
@@ -215,13 +251,15 @@ class Game:
 
     def run(self):
          # Generate the maze
-        self.maze_walls = self.generate_maze()
+        self.generate_maze()
 
         while self.running:
             self.handle_events()
-            self.player.move_along_path(self.path)
+            if AUTOMATE_PLAYER:
+                self.player.move_along_path(self.path)
             self.draw()
-            pygame.time.delay(200) 
+            if AUTOMATE_PLAYER:
+                pygame.time.delay(200) 
 
         # Quit pygame
         pygame.quit()
