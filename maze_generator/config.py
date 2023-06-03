@@ -3,8 +3,8 @@ AUTOMATE_PLAYER = False
 A_STAR = True
 
 # Define the grid size and the window size
-WIDTH = 800
-HEIGHT = 500
+WIDTH = 1600
+HEIGHT = 1000
 GRID_SIZE = 25
 
 # Define the colors
