@@ -1,8 +1,9 @@
 import pygame
 from config import *
 
+
 class Treasure(pygame.sprite.Sprite):
-    def __init__(self, image, grid_x=(WIDTH // GRID_SIZE) - 2, grid_y=(HEIGHT // GRID_SIZE) - 2):
+    def __init__(self, image, grid_x=(MAZE_WIDTH // GRID_SIZE) - 2, grid_y=(MAZE_HEIGHT // GRID_SIZE) - 2):
         super().__init__()
         self.image = pygame.image.load(image)
 

@@ -11,8 +11,8 @@ def on_model(model):
 def get_fire_positions(clingo_walls_fires):
     # Initialize Clingo control
     ctl = clingo.Control()
-    width = WIDTH // GRID_SIZE
-    height = HEIGHT // GRID_SIZE
+    width = MAZE_WIDTH // GRID_SIZE
+    height = MAZE_HEIGHT // GRID_SIZE
 
     # Load the ASP program
     ctl.add("base", [], f"""

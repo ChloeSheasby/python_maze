@@ -1,13 +1,15 @@
-import pygame
 import random
+
+import pygame
 from config import *
+
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, image, grid_x=1, grid_y=1):
         super().__init__()
         # if x == 0 and y == 0:
-        #     x = random.randint(0, WIDTH - PLAYER_SIZE)
-        #     y = random.randint(0, HEIGHT - PLAYER_SIZE)
+        #     x = random.randint(0, MAZE_WIDTH - PLAYER_SIZE)
+        #     y = random.randint(0, MAZE_HEIGHT - PLAYER_SIZE)
         self.image = pygame.image.load(image)
 
         # Scale the image to the desired size
