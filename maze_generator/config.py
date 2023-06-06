@@ -1,7 +1,3 @@
-# Flags for different game plays
-AUTOMATE_PLAYER = True
-A_STAR = True
-
 # Define the grid size and the window size
 MAZE_WIDTH = 800
 MAZE_HEIGHT = 500
@@ -26,7 +22,7 @@ GOAL_POS = (MAZE_WIDTH-1, MAZE_HEIGHT-1)
 
 # Define the font
 FONT = 'Comic Sans MS'
-FONT_SIZE = 20
+FONT_SIZE = 30
 
 P = 0b1000
 
