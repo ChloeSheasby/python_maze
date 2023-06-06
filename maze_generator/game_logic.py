@@ -25,12 +25,30 @@ class Game:
         self.screen = pygame.display.set_mode((MAZE_WIDTH, MAZE_HEIGHT + SCORE_HEIGHT))
         pygame.display.set_caption("My Maze")
 
+        self.options = {
+            "Algorithm": ["A*", "DFS"],
+            "Auto-play": [False, True],
+        }
+
+        # Set up the settings values
+        self.values = {
+            "Algorithm": self.options["Algorithm"][0],
+            "Auto-play": self.options["Auto-play"][0],
+        }
+
+        self.game_state = "settings_menu"
+
         # Define the agent starting position
         self.player = Player("../assets/player.png")
 
         self.score = 0
 
         self.score_text = font.render(f'Score: {self.score}', True, (255, 255, 255))
+
+        # Set up the start button
+        self.start_button = font.render("Start Game", True, (255, 255, 255))
+        self.start_button_rect = self.start_button.get_rect()
+        self.start_button_rect.center = (400, 500)
 
         self.player_size = PLAYER_SIZE
 
@@ -62,29 +80,40 @@ class Game:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
-            keys = pygame.key.get_pressed()
-            if keys[pygame.K_UP]:
-                self.player.rect.y -= self.player_speed if self.player.rect.y - self.player_speed >= 0 else 0
-                if pygame.sprite.spritecollide(self.player, self.maze_walls, False):
-                    print("collision moving up")
-                    self.player.rect.y += self.player_speed
-            if keys[pygame.K_DOWN]:
-                self.player.rect.y += self.player_speed if self.player.rect.y + self.player_speed + self.player_size <= MAZE_HEIGHT else 0
-                if pygame.sprite.spritecollide(self.player, self.maze_walls, False):
-                    print("collision moving down")
-                    self.player.rect.y -= self.player_speed
-            if keys[pygame.K_LEFT]:
-                self.player.rect.x -= self.player_speed if self.player.rect.x - self.player_speed >= 0 else 0
-                if pygame.sprite.spritecollide(self.player, self.maze_walls, False):
-                    print("collision moving left")
-                    self.player.rect.x += self.player_speed
-            if keys[pygame.K_RIGHT]:
-                self.player.rect.x += self.player_speed if self.player.rect.x + self.player_speed + self.player_size <= MAZE_WIDTH else 0
-                if pygame.sprite.spritecollide(self.player, self.maze_walls, False):
-                    print("collision moving right")
-                    self.player.rect.x -= self.player_speed
-            if keys[pygame.K_ESCAPE]:
+            elif self.game_state == "game_over":
                 self.running = False
+            elif self.game_state == "settings_menu":
+                if event.type == pygame.MOUSEBUTTONUP:
+                    pos = pygame.mouse.get_pos()
+                    for key, label, label_rect, clickable_rect in self.labels:
+                        if clickable_rect.collidepoint(pos):
+                            index = self.options[key].index(self.values[key])
+                            self.values[key] = self.options[key][(index + 1) % len(options[key])]
+                            label = font.render(f"{key}: {self.values[key]}", True, (255, 255, 255))
+                            self.labels[self.options[key].index(self.values[key])] = (key, label, label_rect, clickable_rect)
+                    if self.start_button_rect.collidepoint(pos):
+                        self.game_state = "game"
+            elif self.game_state == "game":
+                keys = pygame.key.get_pressed()
+                if keys[pygame.K_UP]:
+                    self.player.rect.y -= self.player_speed if self.player.rect.y - self.player_speed >= 0 else 0
+                    if pygame.sprite.spritecollide(self.player, self.maze_walls, False):
+                        self.player.rect.y += self.player_speed
+                if keys[pygame.K_DOWN]:
+                    self.player.rect.y += self.player_speed if self.player.rect.y + self.player_speed + self.player_size <= MAZE_HEIGHT else 0
+                    if pygame.sprite.spritecollide(self.player, self.maze_walls, False):
+                        self.player.rect.y -= self.player_speed
+                if keys[pygame.K_LEFT]:
+                    self.player.rect.x -= self.player_speed if self.player.rect.x - self.player_speed >= 0 else 0
+                    if pygame.sprite.spritecollide(self.player, self.maze_walls, False):
+                        self.player.rect.x += self.player_speed
+                if keys[pygame.K_RIGHT]:
+                    self.player.rect.x += self.player_speed if self.player.rect.x + self.player_speed + self.player_size <= MAZE_WIDTH else 0
+                    if pygame.sprite.spritecollide(self.player, self.maze_walls, False):
+                        self.player.rect.x -= self.player_speed
+                if keys[pygame.K_ESCAPE]:
+                    self.running = False
+
 
     def recursive_division(self, grid, x, y, width, height):
         if width < 2 or height < 2:
@@ -250,7 +279,7 @@ class Game:
 
         self.maze_walls = maze_walls
         self.maze_fires = maze_fires
-        self.maze_coins = maze_coins
+        self.maze_coins = maze_coins   
 
     def draw(self):
         # Keep the player within the screen
@@ -260,28 +289,47 @@ class Game:
         # Clear the screen
         self.screen.fill((0, 0, 0))
 
-        # Draw score
-        score_rect = self.score_text.get_rect()
-        score_rect.midtop = (MAZE_WIDTH / 2, 10)
-        self.screen.blit(self.score_text, score_rect)
+        if self.game_state == "settings_menu":
+            self.labels = []
+            for i, (key, value) in enumerate(self.options.items()):
+                label = font.render(f"{key}: {value[0]}", True, (255, 255, 255))
+                label_rect = label.get_rect()
+                label_rect.center = (200, 100 + i * 100)
+                clickable_rect = pygame.Rect(label_rect.right, label_rect.top, 200, label_rect.height)
+                self.labels.append((key, label, label_rect, clickable_rect))
 
-        # Draw maze walls
-        for wall in self.maze_walls:
-            self.screen.blit(wall.image, wall.rect.move(0, SCORE_HEIGHT))
+            for label in self.labels:
+                self.screen.blit(label[1], label[2])
 
-        # Draw maze fires
-        for fire in self.maze_fires:
-            self.screen.blit(fire.image, fire.rect.move(0, SCORE_HEIGHT))
+            pygame.draw.rect(self.screen, (255, 255, 255), self.start_button_rect, 2)
+            self.screen.blit(self.start_button, self.start_button_rect)
 
-        # Draw maze coins
-        for coin in self.maze_coins:
-            self.screen.blit(coin.image, coin.rect.move(0, SCORE_HEIGHT))
+        elif self.game_state == "game_over":
+            # Draw game over screen
+            pass
+        elif self.game_state == "game":
+            # Draw score
+            score_rect = self.score_text.get_rect()
+            score_rect.midtop = (MAZE_WIDTH / 2, 10)
+            self.screen.blit(self.score_text, score_rect)
 
-        # Draw player
-        self.screen.blit(self.player.image, self.player.rect.move(0, SCORE_HEIGHT))
+            # Draw maze walls
+            for wall in self.maze_walls:
+                self.screen.blit(wall.image, wall.rect.move(0, SCORE_HEIGHT))
 
-        # Draw treasure
-        self.screen.blit(self.treasure.image, self.treasure.rect.move(0, SCORE_HEIGHT))
+            # Draw maze fires
+            for fire in self.maze_fires:
+                self.screen.blit(fire.image, fire.rect.move(0, SCORE_HEIGHT))
+
+            # Draw maze coins
+            for coin in self.maze_coins:
+                self.screen.blit(coin.image, coin.rect.move(0, SCORE_HEIGHT))
+
+            # Draw player
+            self.screen.blit(self.player.image, self.player.rect.move(0, SCORE_HEIGHT))
+
+            # Draw treasure
+            self.screen.blit(self.treasure.image, self.treasure.rect.move(0, SCORE_HEIGHT))
 
         # Update display
         pygame.display.flip()
@@ -290,14 +338,17 @@ class Game:
     def run(self):
          # Generate the maze
         self.generate_maze()
-
         while self.running:
             self.handle_events()
-            if AUTOMATE_PLAYER:
-                self.player.move_along_path(self.path)
-            self.draw()
-            if AUTOMATE_PLAYER:
-                pygame.time.delay(200) 
+            if self.game_state == "settings_menu":
+                self.draw()
+            elif self.game_state == "game":
+                if AUTOMATE_PLAYER:
+                    self.player.move_along_path(self.path)
+                self.draw()
+                if AUTOMATE_PLAYER:
+                    pygame.time.delay(200) 
+            
 
         # Quit pygame
         pygame.quit()
