@@ -11,8 +11,8 @@ def on_model(model):
 def get_fire_positions(clingo_walls_fires):
     # Initialize Clingo control
     ctl = clingo.Control()
-    width = WIDTH // GRID_SIZE
-    height = HEIGHT // GRID_SIZE
+    width = MAZE_WIDTH // GRID_SIZE
+    height = MAZE_HEIGHT // GRID_SIZE
 
     # Load the ASP program
     ctl.add("base", [], f"""
@@ -37,10 +37,10 @@ def get_fire_positions(clingo_walls_fires):
     :- fire(X, Y), wall(X, Y).
 
     % Ensure no more than 3 fires in the same row
-    :- X = 1..width, #count {{ Y : fire(X, Y) }} > 3.
+    :- X = 1..width, #count {{ Y : fire(X, Y) }} > 4.
 
     % Ensure no more than 3 fires in the same column
-    :- Y = 1..height, #count {{ X : fire(X, Y) }} > 3.
+    :- Y = 1..height, #count {{ X : fire(X, Y) }} > 4.
 
     % Ensure fires are not right next to each other
     :- fire(X, Y), fire(X+1, Y).

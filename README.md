@@ -1,8 +1,11 @@
 # Python Maze Game
+
 This repository is for a maze game written for the AI Projects course at OC.
 
 ## Task 2
+
 ### Instructions
+
 1. Implement your own game (or modify the example code).
 2. Make the agent follow the generated path to the goal.
 3. Implement two more search algorithms for path generation.
@@ -11,8 +14,8 @@ This repository is for a maze game written for the AI Projects course at OC.
 
 https://github.com/ChloeSheasby/python_maze/assets/47607144/ad255711-81fd-4fa5-8f1d-f98619e59ce3
 
-
 ### Demo Screenshots
+
 - The maze is generated randomly each time the project is run.
 <img width="774" alt="Screenshot 2023-05-15 at 6 18 50 PM" src="https://github.com/ChloeSheasby/python_maze/assets/47607144/5280d727-6c96-4163-85a5-2b3d2021dec9">
 
@@ -24,7 +27,8 @@ https://github.com/ChloeSheasby/python_maze/assets/47607144/ad255711-81fd-4fa5-8
 <img width="499" alt="Screenshot 2023-05-15 at 6 19 34 PM" src="https://github.com/ChloeSheasby/python_maze/assets/47607144/9d5ed680-f890-4b3f-86c9-16083b25e336">
 
 ### Searching Algorithms
-#### A* Path Generation
+
+#### A\* Path Generation
 
 ```
 def heuristic(self, a, b):
@@ -66,7 +70,8 @@ def a_star(self, grid, start, end):
 ```
 
 #### DFS Path Generation
-- This uses NetworkX's Depth First Search algorithm. 
+
+- This uses NetworkX's Depth First Search algorithm.
 - The player jumps around the maze with this function since the algorithm is testing the whole path.
 
 ```
@@ -89,18 +94,24 @@ def dfs_path(self, graph, start, end):
 ```
 
 ## Task 3
+
 ### Instructions
+
 - Add ASP to your existing game to generate random pits, rewards, etc.
 
 ### Demo Screenshots
+
 - The maze is generated randomly each time the project is run.
 - The fires are generated randomly. If the player runs into a fire, the player dies and the game quits.
 - The wall colors are also generated randomly. Adjacent walls cannot have the same color.
-<img width="912" alt="Screenshot 2023-05-21 at 9 06 26 PM" src="https://github.com/ChloeSheasby/python_maze/assets/47607144/8279244a-b6d2-47c7-898b-bdc4a246b004">
+  <img width="912" alt="Screenshot 2023-05-21 at 9 06 26 PM" src="https://github.com/ChloeSheasby/python_maze/assets/47607144/8279244a-b6d2-47c7-898b-bdc4a246b004">
 
 ### ASP Additions
+
 #### Fire Generation
-- Only 20 fires can be made, and there cannot be more than 3 fires per row and column. 
+
+- Only 20 fires can be made, and there cannot be more than 3 fires per row and column.
+
 ```
 % Define the dimensions of the maze
 #const width = {width}.
@@ -136,6 +147,7 @@ def dfs_path(self, graph, start, end):
 ```
 
 #### Wall Color Generation
+
 - The idea of this is using the map coloring algorithm to decide wall colors.
 
 ```
@@ -153,4 +165,38 @@ color(color1). color(color2). color(color3). color(color4). color(color5). color
 :- colored_wall(X, Y, C), colored_wall(X, Y+1, C).
 :- colored_wall(X+1, Y, C), colored_wall(X+1, Y+1, C).
 :- colored_wall(X, Y+1, C), colored_wall(X+1, Y+1, C).
+```
+
+## Task 4
+
+### Instructions
+
+- Add probabilistic reasoning to generate another item on your maze.
+
+### Demo Video
+
+https://github.com/ChloeSheasby/python_maze/assets/47607144/5b091646-dbef-4ff4-b2b7-336f04506d93
+
+
+### Probability Addition for Coins
+
+- This creates a 65% probability that a coin will be generated 2 spots away from a fire, and a 2% probability anywhere else in the path.
+
+```
+for x, y in self.path:
+    # Choose a random direction to place the coin
+    dx, dy = random.choice([(0, 1), (0, -1), (1, 0), (-1, 0)])
+    coin_x, coin_y = x, y
+    # Move the coin 1 or 2 spaces in the chosen direction
+    for i in range(random.randint(1, 2)):
+        coin_x += dx
+        coin_y += dy
+        if (coin_x + 2, coin_y + 2) not in fire_positions and (coin_x + 2, coin_y + 2) in self.path:
+            prob_coin = 0.65
+        else:
+            prob_coin = 0.02
+        # Add a coin with the computed probability
+        if random.random() < prob_coin:
+            coin = Coin('../assets/coin.png', coin_x, coin_y)
+            maze_coins.add(coin)
 ```

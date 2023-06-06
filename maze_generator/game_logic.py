@@ -3,13 +3,14 @@ import random
 
 import networkx as nx
 import pygame
-from clingo_fire_generation import *
-from clingo_wall_coloring import *
+from clingo_additions.clingo_fire_generation import *
+from clingo_additions.clingo_wall_coloring import *
 from config import *
-from fire import Fire
-from player import Player
-from treasure import Treasure
-from wall import Wall
+from models.coin import Coin
+from models.fire import Fire
+from models.player import Player
+from models.treasure import Treasure
+from models.wall import Wall
 
 # Initialize pygame
 pygame.init()
@@ -21,18 +22,40 @@ font = pygame.font.SysFont(FONT, FONT_SIZE)
 class Game:
     def __init__(self):
         # Set up the screen
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        self.screen = pygame.display.set_mode((MAZE_WIDTH, MAZE_HEIGHT + SCORE_HEIGHT))
         pygame.display.set_caption("My Maze")
 
+        self.options = {
+            "Algorithm": ["A*", "DFS"],
+            "Auto-play": [False, True],
+        }
+
+        # Set up the settings values
+        self.values = {
+            "Algorithm": self.options["Algorithm"][0],
+            "Auto-play": self.options["Auto-play"][0],
+        }
+
+        self.game_state = "settings_menu"
+
         # Define the agent starting position
-        self.player = Player("./assets/Player.png")
+        self.player = Player("../assets/player.png")
+
+        self.score = 0
+
+        self.score_text = font.render(f'Score: {self.score}', True, (255, 255, 255))
+
+        # Set up the start button
+        self.start_button = font.render("Start Game", True, (255, 255, 255))
+        self.start_button_rect = self.start_button.get_rect()
+        self.start_button_rect.center = (400, 500)
 
         self.player_size = PLAYER_SIZE
 
         self.player_speed = PLAYER_SPEED
 
         # Ending point
-        self.treasure = Treasure("./assets/Treasure.png")
+        self.treasure = Treasure("../assets/treasure.png")
 
         # Define the game loop
         self.running = True
@@ -42,41 +65,55 @@ class Game:
 
     def handle_events(self):
         if self.player.rect.colliderect(self.treasure.rect):
-            print("Congratulations! You've won!")
-            self.running = False
+            self.score_text = font.render("Congratulations! You've won!", True, (255, 255, 255))
         # Check for collisions between the player and fires
         if pygame.sprite.spritecollide(self.player, self.maze_fires, False):
             # Handle character death
-            print("Oh no! You died.")
-            self.running = False
+            self.score_text = font.render("Oh no! You died.", True, (255, 255, 255))
+        # Check for collisions between the player and coins
+        if pygame.sprite.spritecollide(self.player, self.maze_coins, True):
+            # Handle coin collection
+            self.score += 10
+            self.score_text = font.render(f'Score: {self.score}', True, (255, 255, 255))
 
         # Check for user input to move the player
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
-            keys = pygame.key.get_pressed()
-            if keys[pygame.K_UP]:
-                self.player.rect.y -= self.player_speed if self.player.rect.y - self.player_speed >= 0 else 0
-                if pygame.sprite.spritecollide(self.player, self.maze_walls, False):
-                    print("collision moving up")
-                    self.player.rect.y += self.player_speed
-            if keys[pygame.K_DOWN]:
-                self.player.rect.y += self.player_speed if self.player.rect.y + self.player_speed + self.player_size <= HEIGHT else 0
-                if pygame.sprite.spritecollide(self.player, self.maze_walls, False):
-                    print("collision moving down")
-                    self.player.rect.y -= self.player_speed
-            if keys[pygame.K_LEFT]:
-                self.player.rect.x -= self.player_speed if self.player.rect.x - self.player_speed >= 0 else 0
-                if pygame.sprite.spritecollide(self.player, self.maze_walls, False):
-                    print("collision moving left")
-                    self.player.rect.x += self.player_speed
-            if keys[pygame.K_RIGHT]:
-                self.player.rect.x += self.player_speed if self.player.rect.x + self.player_speed + self.player_size <= WIDTH else 0
-                if pygame.sprite.spritecollide(self.player, self.maze_walls, False):
-                    print("collision moving right")
-                    self.player.rect.x -= self.player_speed
-            if keys[pygame.K_ESCAPE]:
+            elif self.game_state == "game_over":
                 self.running = False
+            elif self.game_state == "settings_menu":
+                if event.type == pygame.MOUSEBUTTONUP:
+                    pos = pygame.mouse.get_pos()
+                    for key, label, label_rect, clickable_rect in self.labels:
+                        if clickable_rect.collidepoint(pos):
+                            index = self.options[key].index(self.values[key])
+                            self.values[key] = self.options[key][(index + 1) % len(options[key])]
+                            label = font.render(f"{key}: {self.values[key]}", True, (255, 255, 255))
+                            self.labels[self.options[key].index(self.values[key])] = (key, label, label_rect, clickable_rect)
+                    if self.start_button_rect.collidepoint(pos):
+                        self.game_state = "game"
+            elif self.game_state == "game":
+                keys = pygame.key.get_pressed()
+                if keys[pygame.K_UP]:
+                    self.player.rect.y -= self.player_speed if self.player.rect.y - self.player_speed >= 0 else 0
+                    if pygame.sprite.spritecollide(self.player, self.maze_walls, False):
+                        self.player.rect.y += self.player_speed
+                if keys[pygame.K_DOWN]:
+                    self.player.rect.y += self.player_speed if self.player.rect.y + self.player_speed + self.player_size <= MAZE_HEIGHT else 0
+                    if pygame.sprite.spritecollide(self.player, self.maze_walls, False):
+                        self.player.rect.y -= self.player_speed
+                if keys[pygame.K_LEFT]:
+                    self.player.rect.x -= self.player_speed if self.player.rect.x - self.player_speed >= 0 else 0
+                    if pygame.sprite.spritecollide(self.player, self.maze_walls, False):
+                        self.player.rect.x += self.player_speed
+                if keys[pygame.K_RIGHT]:
+                    self.player.rect.x += self.player_speed if self.player.rect.x + self.player_speed + self.player_size <= MAZE_WIDTH else 0
+                    if pygame.sprite.spritecollide(self.player, self.maze_walls, False):
+                        self.player.rect.x -= self.player_speed
+                if keys[pygame.K_ESCAPE]:
+                    self.running = False
+
 
     def recursive_division(self, grid, x, y, width, height):
         if width < 2 or height < 2:
@@ -167,13 +204,14 @@ class Game:
             return []
 
     def generate_maze(self):
-        grid_width = WIDTH // GRID_SIZE
-        grid_height = HEIGHT // GRID_SIZE
+        grid_width = MAZE_WIDTH // GRID_SIZE
+        grid_height = MAZE_HEIGHT // GRID_SIZE
         grid = [[0 for _ in range(grid_width)] for _ in range(grid_height)]
         self.recursive_division(grid, 0, 0, grid_width, grid_height)
 
         maze_walls = pygame.sprite.Group()  # Create a sprite group for the walls
         maze_fires = pygame.sprite.Group()  # Create a sprite group for the fires
+        maze_coins = pygame.sprite.Group()  # Create a sprite group for the coins
         clingo_walls_fires = ""
         clingo_walls_colors = ""
         start_x, start_y = 1, 1
@@ -218,48 +256,99 @@ class Game:
 
         # Create fire instances and add them to maze_fires sprite group
         for x, y in fire_positions:
-            fire = Fire('./assets/Fire.png', x, y)
+            fire = Fire('../assets/fire.png', x, y)
             maze_fires.add(fire)
+                
+
+        for x, y in self.path:
+            # Choose a random direction to place the coin
+            dx, dy = random.choice([(0, 1), (0, -1), (1, 0), (-1, 0)])
+            coin_x, coin_y = x, y
+            # Move the coin 1 or 2 spaces in the chosen direction
+            for i in range(random.randint(1, 2)):
+                coin_x += dx
+                coin_y += dy
+                if (coin_x + 2, coin_y + 2) not in fire_positions and (coin_x + 2, coin_y + 2) in self.path:
+                    prob_coin = 0.65
+                else:
+                    prob_coin = 0.02
+                # Add a coin with the computed probability
+                if random.random() < prob_coin:
+                    coin = Coin('../assets/coin.png', coin_x, coin_y)
+                    maze_coins.add(coin)     
 
         self.maze_walls = maze_walls
         self.maze_fires = maze_fires
+        self.maze_coins = maze_coins   
 
     def draw(self):
         # Keep the player within the screen
-        PLAYER_POS[0] = max(0, min(WIDTH - self.player_size, PLAYER_POS[0]))
-        PLAYER_POS[1] = max(0, min(HEIGHT - self.player_size, PLAYER_POS[1]))
+        PLAYER_POS[0] = max(0, min(MAZE_WIDTH - self.player_size, PLAYER_POS[0]))
+        PLAYER_POS[1] = max(0, min(MAZE_HEIGHT - self.player_size, PLAYER_POS[1]))
 
         # Clear the screen
         self.screen.fill((0, 0, 0))
 
-        # Draw maze walls
-        for wall in self.maze_walls:
-            self.screen.blit(wall.image, wall.rect)
+        if self.game_state == "settings_menu":
+            self.labels = []
+            for i, (key, value) in enumerate(self.options.items()):
+                label = font.render(f"{key}: {value[0]}", True, (255, 255, 255))
+                label_rect = label.get_rect()
+                label_rect.center = (200, 100 + i * 100)
+                clickable_rect = pygame.Rect(label_rect.right, label_rect.top, 200, label_rect.height)
+                self.labels.append((key, label, label_rect, clickable_rect))
 
-        # Draw maze fires
-        for fire in self.maze_fires:
-            self.screen.blit(fire.image, fire.rect)
+            for label in self.labels:
+                self.screen.blit(label[1], label[2])
 
-        # Draw player
-        self.screen.blit(self.player.image, self.player.rect)
+            pygame.draw.rect(self.screen, (255, 255, 255), self.start_button_rect, 2)
+            self.screen.blit(self.start_button, self.start_button_rect)
 
-        # Draw treasure
-        self.screen.blit(self.treasure.image, self.treasure.rect)
- 
+        elif self.game_state == "game_over":
+            # Draw game over screen
+            pass
+        elif self.game_state == "game":
+            # Draw score
+            score_rect = self.score_text.get_rect()
+            score_rect.midtop = (MAZE_WIDTH / 2, 10)
+            self.screen.blit(self.score_text, score_rect)
+
+            # Draw maze walls
+            for wall in self.maze_walls:
+                self.screen.blit(wall.image, wall.rect.move(0, SCORE_HEIGHT))
+
+            # Draw maze fires
+            for fire in self.maze_fires:
+                self.screen.blit(fire.image, fire.rect.move(0, SCORE_HEIGHT))
+
+            # Draw maze coins
+            for coin in self.maze_coins:
+                self.screen.blit(coin.image, coin.rect.move(0, SCORE_HEIGHT))
+
+            # Draw player
+            self.screen.blit(self.player.image, self.player.rect.move(0, SCORE_HEIGHT))
+
+            # Draw treasure
+            self.screen.blit(self.treasure.image, self.treasure.rect.move(0, SCORE_HEIGHT))
+
         # Update display
         pygame.display.flip()
+
 
     def run(self):
          # Generate the maze
         self.generate_maze()
-
         while self.running:
             self.handle_events()
-            if AUTOMATE_PLAYER:
-                self.player.move_along_path(self.path)
-            self.draw()
-            if AUTOMATE_PLAYER:
-                pygame.time.delay(200) 
+            if self.game_state == "settings_menu":
+                self.draw()
+            elif self.game_state == "game":
+                if AUTOMATE_PLAYER:
+                    self.player.move_along_path(self.path)
+                self.draw()
+                if AUTOMATE_PLAYER:
+                    pygame.time.delay(200) 
+            
 
         # Quit pygame
         pygame.quit()

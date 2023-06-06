@@ -1,10 +1,12 @@
 # Flags for different game plays
-AUTOMATE_PLAYER = False
+AUTOMATE_PLAYER = True
 A_STAR = True
 
 # Define the grid size and the window size
-WIDTH = 800
-HEIGHT = 500
+MAZE_WIDTH = 800
+MAZE_HEIGHT = 500
+SCORE_WIDTH = 800
+SCORE_HEIGHT = 50
 GRID_SIZE = 25
 
 # Define the colors
@@ -20,11 +22,11 @@ PLAYER_SIZE = 25
 PLAYER_SPEED = 25
 
 # Define the goal position
-GOAL_POS = (WIDTH-1, HEIGHT-1)
+GOAL_POS = (MAZE_WIDTH-1, MAZE_HEIGHT-1)
 
 # Define the font
 FONT = 'Comic Sans MS'
-FONT_SIZE = 50
+FONT_SIZE = 20
 
 P = 0b1000
 
