@@ -2,7 +2,7 @@
 
 This repository is for a maze game written for the AI Projects course at OC.
 
-## Task 2
+## Create a Maze Game
 
 ### Instructions
 
@@ -17,14 +17,14 @@ https://github.com/ChloeSheasby/python_maze/assets/47607144/ad255711-81fd-4fa5-8
 ### Demo Screenshots
 
 - The maze is generated randomly each time the project is run.
-<img width="774" alt="Screenshot 2023-05-15 at 6 18 50 PM" src="https://github.com/ChloeSheasby/python_maze/assets/47607144/5280d727-6c96-4163-85a5-2b3d2021dec9">
+  <img width="774" alt="Screenshot 2023-05-15 at 6 18 50 PM" src="https://github.com/ChloeSheasby/python_maze/assets/47607144/5280d727-6c96-4163-85a5-2b3d2021dec9">
 
 - The agent can make their way through the maze.
-<img width="774" alt="Screenshot 2023-05-15 at 6 19 01 PM" src="https://github.com/ChloeSheasby/python_maze/assets/47607144/f5005e0e-2999-4f96-a473-9c5cb9955d52">
-<img width="774" alt="Screenshot 2023-05-15 at 6 19 13 PM" src="https://github.com/ChloeSheasby/python_maze/assets/47607144/93086624-d8f6-40a2-9192-9623520ef033">
+  <img width="774" alt="Screenshot 2023-05-15 at 6 19 01 PM" src="https://github.com/ChloeSheasby/python_maze/assets/47607144/f5005e0e-2999-4f96-a473-9c5cb9955d52">
+  <img width="774" alt="Screenshot 2023-05-15 at 6 19 13 PM" src="https://github.com/ChloeSheasby/python_maze/assets/47607144/93086624-d8f6-40a2-9192-9623520ef033">
 
 - When the agent makes it to the treasure chest, they have won.
-<img width="499" alt="Screenshot 2023-05-15 at 6 19 34 PM" src="https://github.com/ChloeSheasby/python_maze/assets/47607144/9d5ed680-f890-4b3f-86c9-16083b25e336">
+  <img width="499" alt="Screenshot 2023-05-15 at 6 19 34 PM" src="https://github.com/ChloeSheasby/python_maze/assets/47607144/9d5ed680-f890-4b3f-86c9-16083b25e336">
 
 ### Searching Algorithms
 
@@ -93,7 +93,7 @@ def dfs_path(self, graph, start, end):
         return []
 ```
 
-## Task 3
+## Add Obstacles with ASP
 
 ### Instructions
 
@@ -167,7 +167,7 @@ color(color1). color(color2). color(color3). color(color4). color(color5). color
 :- colored_wall(X, Y+1, C), colored_wall(X+1, Y+1, C).
 ```
 
-## Task 4
+## Add Coins with Probability
 
 ### Instructions
 
@@ -176,7 +176,6 @@ color(color1). color(color2). color(color3). color(color4). color(color5). color
 ### Demo Video
 
 https://github.com/ChloeSheasby/python_maze/assets/47607144/5b091646-dbef-4ff4-b2b7-336f04506d93
-
 
 ### Probability Addition for Coins
 
