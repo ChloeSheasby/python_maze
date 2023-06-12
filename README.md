@@ -2,6 +2,34 @@
 
 This repository is for a maze game written for the AI Projects course at OC.
 
+Table of Contents
+
+- [Python Maze Game](#python-maze-game)
+  - [Create a Maze Game](#create-a-maze-game)
+    - [Instructions](#instructions)
+    - [Demo Video](#demo-video)
+    - [Demo Screenshots](#demo-screenshots)
+    - [Searching Algorithms](#searching-algorithms)
+      - [A\* Path Generation](#a-path-generation)
+      - [DFS Path Generation](#dfs-path-generation)
+  - [Add Obstacles with ASP](#add-obstacles-with-asp)
+    - [Instructions](#instructions-1)
+    - [Demo Screenshots](#demo-screenshots-1)
+    - [ASP Additions](#asp-additions)
+      - [Fire Generation](#fire-generation)
+      - [Wall Color Generation](#wall-color-generation)
+  - [Add Coins with Probability](#add-coins-with-probability)
+    - [Instructions](#instructions-2)
+    - [Demo Video](#demo-video-1)
+    - [Probability Addition for Coins](#probability-addition-for-coins)
+  - [Add Flowers with a Support Vector Machine](#add-flowers-with-a-support-vector-machine)
+    - [Instructions](#instructions-3)
+    - [Demo Screenshot](#demo-screenshot)
+    - [Machine Learning Addition](#machine-learning-addition)
+      - [SVM Model Creation and Prediction](#svm-model-creation-and-prediction)
+      - [Flower Generation](#flower-generation)
+      - [Flower Interaction and Model Prediction](#flower-interaction-and-model-prediction)
+
 ## Create a Maze Game
 
 ### Instructions
@@ -198,4 +226,89 @@ for x, y in self.path:
         if random.random() < prob_coin:
             coin = Coin('../assets/coin.png', coin_x, coin_y)
             maze_coins.add(coin)
+```
+
+## Add Flowers with a Support Vector Machine
+
+### Instructions
+
+- Add a machine learning model with sklearn into your game.
+- I chose to use a Support Vector Machine with the Iris dataset.
+- Every time a player encounters a flower, the model makes a prediction on the test data.
+- If the model is correct, the player receives a random amount of points.
+- If the model is incorrect, the player loses a random amount of points.
+
+### Demo Screenshot
+
+### Machine Learning Addition
+
+#### SVM Model Creation and Prediction
+
+- This creates a Support Vector Machine model with the Iris dataset.
+
+```
+# Load the iris dataset
+iris = load_iris()
+
+# Split the data into features and target variable
+X = iris.data
+y = iris.target
+
+# Split the data into training and testing sets - increasing the test_size increases the accuracy
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.45, random_state=31)
+
+# Create the model and set the kernel
+model = SVC(kernel='linear')
+
+# Train the model on the training data
+model.fit(X_train, y_train)
+```
+
+```
+def get_random_test_object_prediction(model, X_test, y_test):
+    # Get a random test object
+    test_object = get_random_test_object(X_test)
+    # Predict the class of the test object
+    prediction = model.predict(test_object.reshape(1, -1))[0]
+    # Get the actual class of the test object
+    actual = y_test[X_test.tolist().index(test_object.tolist())]
+    return prediction == actual
+```
+
+#### Flower Generation
+
+- This creates a 1% probability that a flower will be generated on any space on the path.
+
+```
+for x, y in self.path:
+    ...
+    for i in range(random.randint(1, 2)):
+        ...
+        prob_flower = 0.1
+        ...
+        # Add a flower with the computed probability
+        if random.random() < prob_flower:
+            flower = Obstacle('../assets/flower.png', x, y)
+            maze_flowers.add(flower)
+```
+
+#### Flower Interaction and Model Prediction
+
+- Whenever a player crosses over a flower, the model will make a prediction and the player will gain or lose points.
+
+```
+if pygame.sprite.spritecollide(self.player, self.maze_flowers, True):
+# How many points to add or subtract
+    points = random.randint(0, 10)
+
+    # Predict the class of the selected entry
+    correctPrediction = get_random_test_object_prediction(self.model, self.X_test, self.y_test)
+
+    # Compare the predicted class with the actual class
+    if correctPrediction:
+        self.score += points
+    else:
+        self.score -= points
+    self.score_text = font.render(f'Score: {self.score}', True, (255, 255, 255))
+    self.info_text = font.render(f'You {"predicted correctly and gained" if correctPrediction else "predicted incorrectly and lost"} {points} points!', True, (255, 255, 255))
 ```

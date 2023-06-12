@@ -2,7 +2,7 @@ import pygame
 from config import *
 
 
-class Coin(pygame.sprite.Sprite):
+class Obstacle(pygame.sprite.Sprite):
     def __init__(self, image, x, y):
         super().__init__()
         self.image = pygame.image.load(image)

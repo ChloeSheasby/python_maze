@@ -1,17 +1,18 @@
 import heapq
 import random
+import time
 
 import networkx as nx
 import pygame
 from clingo_additions.clingo_fire_generation import *
 from clingo_additions.clingo_wall_coloring import *
 from config import *
-from models.coin import Coin
-from models.fire import Fire
+from models.obstacle import Obstacle
 from models.player import Player
 from models.treasure import Treasure
 from models.wall import Wall
 from settings import SettingsPage
+from svc_training import get_random_test_object_prediction, start_training
 
 # Initialize pygame
 pygame.init()
@@ -37,6 +38,8 @@ class Game:
 
         self.score_text = font.render(f'Score: {self.score}', True, (255, 255, 255))
 
+        self.info_text = font.render("", True, (255, 255, 255))
+
         # Set up the start button
         self.start_button = font.render("Start Game", True, (255, 255, 255))
         self.start_button_rect = self.start_button.get_rect()
@@ -57,17 +60,34 @@ class Game:
 
     def handle_events(self):
         if self.player.rect.colliderect(self.treasure.rect):
-            self.score_text = font.render("Congratulations! You've won!", True, (255, 255, 255))
+            self.info_text = font.render("Congratulations! You've won!", True, (255, 255, 255))
         # Check for collisions between the player and fires
         if pygame.sprite.spritecollide(self.player, self.maze_fires, False):
             # Handle character death
-            self.score_text = font.render("Oh no! You died.", True, (255, 255, 255))
+            self.info_text = font.render("Oh no! You died.", True, (255, 255, 255))
         # Check for collisions between the player and coins
         if pygame.sprite.spritecollide(self.player, self.maze_coins, True):
             # Handle coin collection
             self.score += 10
             self.score_text = font.render(f'Score: {self.score}', True, (255, 255, 255))
+        # Check for collisions between the player and flowers
+        if pygame.sprite.spritecollide(self.player, self.maze_flowers, True):
+            # Pause for a few seconds
+            # time.sleep(3)
 
+            # How many points to add or subtract
+            points = random.randint(0, 10)
+            
+            # Predict the class of the selected entry
+            correctPrediction = get_random_test_object_prediction(self.model, self.X_test, self.y_test)
+
+            # Compare the predicted class with the actual class
+            if correctPrediction:
+                self.score += points
+            else:
+                self.score -= points
+            self.score_text = font.render(f'Score: {self.score}', True, (255, 255, 255))
+            self.info_text = font.render(f'You {"predicted correctly and gained" if correctPrediction else "predicted incorrectly and lost"} {points} points!', True, (255, 255, 255))
         # Check for user input to move the player
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -190,6 +210,7 @@ class Game:
         maze_walls = pygame.sprite.Group()  # Create a sprite group for the walls
         maze_fires = pygame.sprite.Group()  # Create a sprite group for the fires
         maze_coins = pygame.sprite.Group()  # Create a sprite group for the coins
+        maze_flowers = pygame.sprite.Group()  # Create a sprite group for the flowers
         clingo_walls_fires = ""
         clingo_walls_colors = ""
         start_x, start_y = 1, 1
@@ -236,10 +257,9 @@ class Game:
 
         # Create fire instances and add them to maze_fires sprite group
         for x, y in fire_positions:
-            fire = Fire('../assets/fire.png', x, y)
+            fire = Obstacle('../assets/fire.png', x, y)
             maze_fires.add(fire)
                 
-
         for x, y in self.path:
             # Choose a random direction to place the coin
             dx, dy = random.choice([(0, 1), (0, -1), (1, 0), (-1, 0)])
@@ -252,14 +272,21 @@ class Game:
                     prob_coin = 0.65
                 else:
                     prob_coin = 0.02
+                prob_flower = 0.1
                 # Add a coin with the computed probability
                 if random.random() < prob_coin:
-                    coin = Coin('../assets/coin.png', coin_x, coin_y)
-                    maze_coins.add(coin)     
+                    coin = Obstacle('../assets/coin.png', coin_x, coin_y)
+                    maze_coins.add(coin)  
+
+                # Add a flower with the computed probability
+                if random.random() < prob_flower:
+                    flower = Obstacle('../assets/flower.png', x, y)
+                    maze_flowers.add(flower)   
 
         self.maze_walls = maze_walls
         self.maze_fires = maze_fires
-        self.maze_coins = maze_coins   
+        self.maze_coins = maze_coins  
+        self.maze_flowers = maze_flowers 
 
     def draw(self):
         # Keep the player within the screen
@@ -270,9 +297,13 @@ class Game:
         self.screen.fill((0, 0, 0))
        
         # Draw score
-        score_rect = self.score_text.get_rect()
-        score_rect.midtop = (MAZE_WIDTH / 2, 10)
+        score_rect = self.score_text.get_rect(topright=(MAZE_WIDTH - 10, 10))
         self.screen.blit(self.score_text, score_rect)
+
+        # Draw info
+        info_rect = self.info_text.get_rect(topleft=(10, 10))
+        self.screen.blit(self.info_text, info_rect)
+
 
         # Draw maze walls
         for wall in self.maze_walls:
@@ -286,6 +317,10 @@ class Game:
         for coin in self.maze_coins:
             self.screen.blit(coin.image, coin.rect.move(0, SCORE_HEIGHT))
 
+        # Draw maze flowers
+        for flower in self.maze_flowers:
+            self.screen.blit(flower.image, flower.rect.move(0, SCORE_HEIGHT))
+
         # Draw player
         self.screen.blit(self.player.image, self.player.rect.move(0, SCORE_HEIGHT))
 
@@ -297,7 +332,9 @@ class Game:
 
 
     def run(self):
-         # Generate the maze
+        # Train on data
+        self.model, self.X_test, self.y_test = start_training()
+        # Generate the maze
         self.generate_maze()
         while self.running:
             self.handle_events()
