@@ -121,7 +121,7 @@ def dfs_path(self, graph, start, end):
         return []
 ```
 
-## Add Obstacles with ASP
+## Add Fires with ASP
 
 ### Instructions
 
@@ -239,8 +239,8 @@ for x, y in self.path:
 - If the model is incorrect, the player loses a random amount of points.
 
 ### Demo Screenshot
-
-<img width="912" alt="Screenshot 2023-06-11 at 9 55 24 PM" src="https://github.com/ChloeSheasby/python_maze/assets/47607144/204cd61b-ce07-45c3-b51c-a14ff4b63ea7">
+- The maze will let you know how many points you gained or lost after encountering a flower.
+<img width="912" alt="Screenshot 2023-06-11 at 9 55 24 PM" src="https://github.com/ChloeSheasby/python_maze/assets/47607144/ed3ffa71-2d99-477a-bb67-acc3245bd06c">
 
 ### Machine Learning Addition
 
@@ -249,24 +249,29 @@ for x, y in self.path:
 - This creates a Support Vector Machine model with the Iris dataset.
 
 ```
-# Load the iris dataset
-iris = load_iris()
+def start_training():
+    # Load the iris dataset
+    iris = load_iris()
 
-# Split the data into features and target variable
-X = iris.data
-y = iris.target
+    # Split the data into features and target variable
+    X = iris.data
+    y = iris.target
 
-# Split the data into training and testing sets - increasing the test_size increases the accuracy
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.45, random_state=31)
+    # Split the data into training and testing sets - increasing the test_size increases the accuracy
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.45, random_state=31)
 
-# Create the model and set the kernel
-model = SVC(kernel='linear')
+    # Create the model and set the kernel
+    model = SVC(kernel='linear')
 
-# Train the model on the training data
-model.fit(X_train, y_train)
-```
+    # Train the model on the training data
+    model.fit(X_train, y_train)
 
-```
+    return model, X_test, y_test
+
+def get_random_test_object(X_test):
+    # Get a random test object
+    return X_test[random.randint(0, len(X_test)-1)]
+
 def get_random_test_object_prediction(model, X_test, y_test):
     # Get a random test object
     test_object = get_random_test_object(X_test)
