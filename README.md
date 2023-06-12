@@ -240,6 +240,8 @@ for x, y in self.path:
 
 ### Demo Screenshot
 
+<img width="912" alt="Screenshot 2023-06-11 at 9 55 24 PM" src="https://github.com/ChloeSheasby/python_maze/assets/47607144/204cd61b-ce07-45c3-b51c-a14ff4b63ea7">
+
 ### Machine Learning Addition
 
 #### SVM Model Creation and Prediction
