@@ -208,6 +208,7 @@ class Game:
         self.recursive_division(grid, 0, 0, grid_width, grid_height)
 
         maze_walls = pygame.sprite.Group()  # Create a sprite group for the walls
+        maze_path = pygame.Surface((MAZE_WIDTH, MAZE_HEIGHT), pygame.SRCALPHA)  # Create a surface for the path
         maze_fires = pygame.sprite.Group()  # Create a sprite group for the fires
         maze_coins = pygame.sprite.Group()  # Create a sprite group for the coins
         maze_flowers = pygame.sprite.Group()  # Create a sprite group for the flowers
@@ -281,9 +282,16 @@ class Game:
                 # Add a flower with the computed probability
                 if random.random() < prob_flower:
                     flower = Obstacle('../assets/flower.png', x, y)
-                    maze_flowers.add(flower)   
+                    maze_flowers.add(flower) 
+
+        if self.values["Auto-play"]:
+            # create a list of points representing the centers of the squares in the path
+            points = [((x + 0.5) * GRID_SIZE, (y + 0.5) * GRID_SIZE) for x, y in self.path]
+            # draw the connecting lines between the points
+            pygame.draw.lines(maze_path, (243, 221, 213), False, points, 5)
 
         self.maze_walls = maze_walls
+        self.maze_path = maze_path
         self.maze_fires = maze_fires
         self.maze_coins = maze_coins  
         self.maze_flowers = maze_flowers 
@@ -304,10 +312,12 @@ class Game:
         info_rect = self.info_text.get_rect(topleft=(10, 10))
         self.screen.blit(self.info_text, info_rect)
 
-
         # Draw maze walls
         for wall in self.maze_walls:
             self.screen.blit(wall.image, wall.rect.move(0, SCORE_HEIGHT))
+
+        if self.values["Auto-play"]:
+            self.screen.blit(self.maze_path, (0, SCORE_HEIGHT))
 
         # Draw maze fires
         for fire in self.maze_fires:
